@@ -19,7 +19,7 @@ vim.keymap.set("n", "<leader>nt", "<Cmd>Neotree toggle<CR>", { remap = true })
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 
-vim.keymap.set("n", "<leader>f", function()
+vim.keymap.set("n", "<leader>fm", function()
 	vim.lsp.buf.format()
 end)
 
