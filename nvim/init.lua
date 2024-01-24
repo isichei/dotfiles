@@ -129,6 +129,7 @@ require('lazy').setup({
         topdelete = { text = '‾' },
         changedelete = { text = '~' },
       },
+      current_line_blame = true,
       on_attach = function(bufnr)
         vim.keymap.set('n', '<leader>gp', require('gitsigns').prev_hunk,
           { buffer = bufnr, desc = '[G]o to [P]revious Hunk' })
@@ -204,8 +205,17 @@ require('lazy').setup({
     build = ':TSUpdate',
   },
 
-  { 'akinsho/bufferline.nvim',       version = "*", dependencies = 'nvim-tree/nvim-web-devicons' },
+  {
+    'akinsho/bufferline.nvim',
+    version = "*",
+    dependencies =
+    'nvim-tree/nvim-web-devicons'
+  },
   --    For additional information see: https://github.com/folke/lazy.nvim#-structuring-your-plugins
+  -- {
+  --   "folke/trouble.nvim",
+  --   dependencies = { "nvim-tree/nvim-web-devicons" }
+  -- },
   { import = 'custom.plugins' },
   { "christoomey/vim-tmux-navigator" },
   {
@@ -356,8 +366,7 @@ vim.cmd.colorscheme("catppuccin-mocha")
 -- See `:help nvim-treesitter`
 require('nvim-treesitter.configs').setup {
   -- Add languages to be installed here that you want installed for treesitter
-  ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim',
-    'templ' },
+  ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim' },
 
 
   -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
@@ -421,6 +430,7 @@ require('nvim-treesitter.configs').setup {
 }
 
 -- Diagnostic keymaps
+-- vim.keymap.set("n", "<leader>xx", function() require("trouble").toggle() end, { desc = 'Toggle Trouble' })
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
@@ -483,7 +493,7 @@ local servers = {
   gopls = {},
   pyright = { filetypes = { 'python' } },
   html = { filetypes = { 'html', 'twig', 'hbs' } },
-  templ = {},
+  -- templ = {},
   lua_ls = {
     Lua = {
       workspace = { checkThirdParty = false },
@@ -531,22 +541,22 @@ cmp.setup {
       luasnip.lsp_expand(args.body)
     end,
   },
-  mapping = cmp.mapping.preset.insert {
-    ['<S-Down>'] = cmp.mapping.select_next_item(),
-    ['<S-Up>'] = cmp.mapping.select_prev_item(),
-    ['<C-Down>'] = cmp.mapping.scroll_docs(-4),
-    ['<C-Up>'] = cmp.mapping.scroll_docs(4),
-    ["<CR>"] = cmp.mapping({
-      i = function(fallback)
-        if cmp.visible() and cmp.get_active_entry() then
-          cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = false })
-        else
-          fallback()
-        end
-      end,
-      s = cmp.mapping.confirm({ select = true }),
-      c = cmp.mapping.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true }),
-    }),
+  mapping = {
+    ['<S-Tab>'] = cmp.mapping.select_next_item(),
+    ["<Enter>"] = function(fallback)
+      if cmp.visible() and cmp.get_active_entry() then
+        cmp.confirm({ behavior = cmp.ConfirmBehavior.Insert, select = false })
+      else
+        fallback()
+      end
+    end,
+    ["<S-Enter>"] = function(fallback)
+      if cmp.visible() and cmp.get_active_entry() then
+        cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = false })
+      else
+        fallback()
+      end
+    end,
   },
   sources = {
     { name = 'nvim_lsp', keyword_length = 3 },
@@ -563,6 +573,9 @@ cmp.setup {
         luasnip = "[snip]",
       },
     },
+  },
+  experimental = {
+    ghost_text = true,
   },
 }
 
