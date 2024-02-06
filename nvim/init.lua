@@ -1,51 +1,7 @@
---[[
+-- Vim options / setup
+require("opts_and_keymaps")
 
-=====================================================================
-==================== READ THIS BEFORE CONTINUING ====================
-=====================================================================
-
-Kickstart.nvim is *not* a distribution.
-
-Kickstart.nvim is a template for your own configuration.
-  The goal is that you can read every line of code, top-to-bottom, understand
-  what your configuration is doing, and modify it to suit your needs.
-
-  Once you've done that, you should start exploring, configuring and tinkering to
-  explore Neovim!
-
-  If you don't know anything about Lua, I recommend taking some time to read through
-  a guide. One possible example:
-  - https://learnxinyminutes.com/docs/lua/
-
-
-  And then you can explore or search through `:help lua-guide`
-  - https://neovim.io/doc/user/lua-guide.html
-
-
-Kickstart Guide:
-
-I have left several `:help X` comments throughout the init.lua
-You should run that command and read that help section for more information.
-
-In addition, I have some `NOTE:` items throughout the file.
-These are for you, the reader to help understand what is happening. Feel free to delete
-them once you know what you're doing, but they should serve as a guide for when you
-are first encountering a few different constructs in your nvim config.
-
-I hope you enjoy your Neovim journey,
-- TJ
-
-P.S. You can delete this when you're done too. It's your config now :)
---]]
--- Set <space> as the leader key
--- See `:help mapleader`
---  NOTE: Must happen before plugins are required (otherwise wrong leader will be used)
-vim.g.mapleader = ' '
-vim.g.maplocalleader = ' '
-
--- Install package manager
---    https://github.com/folke/lazy.nvim
---    `:help lazy.nvim.txt` for more info
+-- Lazyvim
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
 if not vim.loop.fs_stat(lazypath) then
   vim.fn.system {
@@ -59,13 +15,7 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
--- NOTE: Here is where you install your plugins.
---  You can configure plugins using the `config` key.
---
---  You can also configure plugins after the setup call,
---    as they will be available in your neovim runtime.
 require('lazy').setup({
-  -- NOTE: First, some plugins that don't require any configuration
 
   -- Git related plugins
   'tpope/vim-fugitive',
@@ -74,8 +24,6 @@ require('lazy').setup({
   -- Detect tabstop and shiftwidth automatically
   'tpope/vim-sleuth',
 
-  -- NOTE: This is where your plugins related to LSP can be installed.
-  --  The configuration is done below. Search for lspconfig to find it below.
   {
     -- LSP Configuration & Plugins
     'neovim/nvim-lspconfig',
@@ -116,7 +64,7 @@ require('lazy').setup({
   },
 
   -- Useful plugin to show you pending keybinds.
-  { 'folke/which-key.nvim', opts = {} },
+  { 'folke/which-key.nvim',  opts = {} },
   {
     -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
@@ -131,35 +79,27 @@ require('lazy').setup({
       },
       current_line_blame = true,
       on_attach = function(bufnr)
-        vim.keymap.set('n', '<leader>gp', require('gitsigns').prev_hunk,
-          { buffer = bufnr, desc = '[G]o to [P]revious Hunk' })
-        vim.keymap.set('n', '<leader>gn', require('gitsigns').next_hunk, { buffer = bufnr, desc = '[G]o to [N]ext Hunk' })
-        vim.keymap.set('n', '<leader>ph', require('gitsigns').preview_hunk, { buffer = bufnr, desc = '[P]review [H]unk' })
+        vim.keymap.set("n", "<leader>gp", require("gitsigns").prev_hunk,
+          { buffer = bufnr, desc = "Go to previous git Hunk" })
+        vim.keymap.set("n", "<leader>gn", require("gitsigns").next_hunk, { buffer = bufnr, desc = "Go to next git Hunk" })
+        vim.keymap.set("n", "<leader>gi", require("gitsigns").preview_hunk_inline,
+          { buffer = bufnr, desc = "Git Preview Hunk Inline" })
+        vim.keymap.set("n", "<leader>ghr", ":Gitsigns reset_hunk<CR>", { buffer = bufnr, desc = "Git Reset Hunk" })
+        vim.keymap.set("n", "<leader>ghR", require("gitsigns").reset_buffer,
+          { buffer = bufnr, desc = "Git Reset Buffer" })
+
+        vim.keymap.set("n", "<leader>ghs", ":Gitsigns stage_hunk<CR>", { buffer = bufnr, desc = "Git Stage Hunk" })
+        vim.keymap.set("n", "<leader>ghS", require("gitsigns").stage_buffer,
+          { buffer = bufnr, desc = "Git Stage Buffer" })
+
+        vim.keymap.set("n", "<leader>ghu", require("gitsigns").undo_stage_hunk,
+          { buffer = bufnr, desc = "Git undo stage Hunk" })
+
+        vim.keymap.set("n", "<leader>gb", "<cmd>Gitsigns toggle_current_line_blame<CR>",
+          { desc = "Toggle git blame current line" })
+        vim.keymap.set("n", "<leader>gd", "<cmd>Gitsigns diffthis<CR>", { desc = "Vertical Git diff" })
       end,
     },
-  },
-  { "catppuccin/nvim",      name = "catppuccin", priority = 1000 },
-  {
-    -- Set lualine as statusline
-    'nvim-lualine/lualine.nvim',
-    -- See `:help lualine.txt`
-    opts = {
-      options = {
-        icons_enabled = false,
-        theme = 'catppuccin',
-        component_separators = '|',
-        section_separators = '',
-      },
-
-      sections = {
-        lualine_c = {
-          {
-            'filename',
-            path = 1
-          }
-        }
-      }
-    }
   },
   {
     -- Add indentation guides even on blank lines
@@ -172,7 +112,7 @@ require('lazy').setup({
   },
 
   -- "gc" to comment visual regions/lines
-  { 'numToStr/Comment.nvim',         opts = {} },
+  { 'numToStr/Comment.nvim', opts = {} },
 
   -- Fuzzy Finder (files, lsp, etc)
   {
@@ -204,90 +144,27 @@ require('lazy').setup({
     },
     build = ':TSUpdate',
   },
-
+  {
+    "nvim-treesitter/nvim-treesitter-context",
+    opts = { mode = "cursor", max_lines = 3 }
+  },
   {
     'akinsho/bufferline.nvim',
     version = "*",
-    dependencies =
-    'nvim-tree/nvim-web-devicons'
+    dependencies = 'nvim-tree/nvim-web-devicons',
+    config = function()
+      require("bufferline").setup {}
+    end,
   },
-  --    For additional information see: https://github.com/folke/lazy.nvim#-structuring-your-plugins
-  -- {
-  --   "folke/trouble.nvim",
-  --   dependencies = { "nvim-tree/nvim-web-devicons" }
-  -- },
-  { import = 'custom.plugins' },
-  { "christoomey/vim-tmux-navigator" },
   {
-    "jose-elias-alvarez/null-ls.nvim",
-    ft = { "python" },
-    opts = function()
-      return require "custom.configs.null-ls"
-    end
-  }
+    "folke/trouble.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    keys = {
+      { "<leader>xx", function() require("trouble").toggle() end, desc = "Symbols Outline" }
+    },
+  },
+  { import = 'plugins' },
 }, {})
-
--- [[ Setting options ]]
--- See `:help vim.o`
--- NOTE: You can change these options as you wish!
-
--- Set highlight on search
-vim.o.hlsearch = false
-
--- Make line numbers default
-vim.wo.number = true
-
--- Enable mouse mode
-vim.o.mouse = 'a'
-
--- Sync clipboard between OS and Neovim.
---  Remove this option if you want your OS clipboard to remain independent.
---  See `:help 'clipboard'`
-vim.o.clipboard = 'unnamedplus'
-
--- Enable break indent
-vim.o.breakindent = true
-
--- Save undo history
-vim.o.undofile = true
-
--- Case-insensitive searching UNLESS \C or capital in search
-vim.o.ignorecase = true
-vim.o.smartcase = true
-
--- Keep signcolumn on by default
-vim.wo.signcolumn = 'yes'
-
--- Decrease update time
-vim.o.updatetime = 250
-vim.o.timeoutlen = 300
-
--- Set completeopt to have a better completion experience
-vim.o.completeopt = 'menuone,noselect'
-
--- NOTE: You should make sure your terminal supports this
-vim.o.termguicolors = true
-
--- [[ Basic Keymaps ]]
-
--- Keymaps for better default experience
--- See `:help vim.keymap.set()`
-vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
-
--- Remap for dealing with word wrap
-vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
-vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
-
--- [[ Highlight on yank ]]
--- See `:help vim.highlight.on_yank()`
-local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
-vim.api.nvim_create_autocmd('TextYankPost', {
-  callback = function()
-    vim.highlight.on_yank()
-  end,
-  group = highlight_group,
-  pattern = '*',
-})
 
 -- [[ Configure Telescope ]]
 -- See `:help telescope` and `:help telescope.setup()`
@@ -302,6 +179,7 @@ table.insert(vimgrep_arguments, "--hidden")
 -- I don't want to search in the `.git` directory.
 table.insert(vimgrep_arguments, "--glob")
 table.insert(vimgrep_arguments, "!**/.git/*")
+table.insert(vimgrep_arguments, "!**/.venv/*")
 
 telescope.setup({
   defaults = {
@@ -342,25 +220,6 @@ vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags, { desc
 vim.keymap.set('n', '<leader>sw', require('telescope.builtin').grep_string, { desc = '[S]earch current [W]ord' })
 vim.keymap.set('n', '<leader>sg', require('telescope.builtin').live_grep, { desc = '[S]earch by [G]rep' })
 vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { desc = '[S]earch [D]iagnostics' })
-
-
--- [[ Configure Catppuccino]]
-require("catppuccin").setup({
-  flavour = 'mocha',
-  term_colors = true,
-  integrations = {
-    cmp = true,
-    gitsigns = true,
-    nvimtree = true,
-    treesitter = true,
-    notify = false,
-    mini = {
-      enabled = true,
-      indentscope_color = "",
-    },
-  }
-})
-vim.cmd.colorscheme("catppuccin-mocha")
 
 -- [[ Configure Treesitter ]]
 -- See `:help nvim-treesitter`
@@ -542,27 +401,26 @@ cmp.setup {
     end,
   },
   mapping = {
-    ['<S-Tab>'] = cmp.mapping.select_next_item(),
-    ["<Enter>"] = function(fallback)
+    ["<Tab>"] = function(fallback)
       if cmp.visible() and cmp.get_active_entry() then
-        cmp.confirm({ behavior = cmp.ConfirmBehavior.Insert, select = false })
+        cmp.confirm({ behavior = cmp.ConfirmBehavior.Insert, select = true })
       else
         fallback()
       end
     end,
-    ["<S-Enter>"] = function(fallback)
+    ["<S-Tab>"] = function(fallback)
       if cmp.visible() and cmp.get_active_entry() then
-        cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = false })
+        cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
       else
         fallback()
       end
     end,
   },
   sources = {
-    { name = 'nvim_lsp', keyword_length = 3 },
-    { name = "buffer",   keyword_length = 5 },
-    { name = "path",     keyword_length = 5 },
-    { name = 'luasnip',  keyword_length = 3 },
+    { name = "Lnvim_lsp" },
+    { name = "buffer" },
+    { name = "path" },
+    { name = "luasnip" },
   },
   formatting = {
     format = lspkind.cmp_format {
@@ -578,6 +436,3 @@ cmp.setup {
     ghost_text = true,
   },
 }
-
--- The line beneath this is called `modeline`. See `:help modeline`
--- vim: ts=2 sts=2 sw=2 et
