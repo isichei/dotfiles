@@ -34,7 +34,7 @@ require('lazy').setup({
 
       -- Useful status updates for LSP
       -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
-      { 'j-hui/fidget.nvim',       tag = 'legacy', opts = {} },
+      { 'j-hui/fidget.nvim', opts = {} },
 
       -- Additional lua configuration, makes nvim stuff amazing!
       'folke/neodev.nvim',
@@ -160,7 +160,7 @@ require('lazy').setup({
     "folke/trouble.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     keys = {
-      { "<leader>xx", function() require("trouble").toggle() end, desc = "Symbols Outline" }
+      { "<leader>xx", function() require("trouble").toggle() end, desc = "Toggle Trouble" }
     },
   },
   { import = 'plugins' },
@@ -179,7 +179,10 @@ table.insert(vimgrep_arguments, "--hidden")
 -- I don't want to search in the `.git` directory.
 table.insert(vimgrep_arguments, "--glob")
 table.insert(vimgrep_arguments, "!**/.git/*")
+table.insert(vimgrep_arguments, "--glob")
 table.insert(vimgrep_arguments, "!**/.venv/*")
+table.insert(vimgrep_arguments, "--glob")
+table.insert(vimgrep_arguments, "!**/__pycache__/*")
 
 telescope.setup({
   defaults = {
@@ -195,7 +198,7 @@ telescope.setup({
   pickers = {
     find_files = {
       -- `hidden = true` will still show the inside of `.git/` as it's not `.gitignore`d.
-      find_command = { "rg", "--files", "--hidden", "--glob", "!**/.git/*" },
+      find_command = { "rg", "--files", "--hidden", "--glob", "!**/.git/*", "--glob", "!**/.venv/*", "--glob", "!**/__pycache__/*" },
     },
   },
 })
@@ -217,7 +220,14 @@ end, { desc = '[/] Fuzzily search in current buffer' })
 vim.keymap.set('n', '<leader>gf', require('telescope.builtin').git_files, { desc = 'Search [G]it [F]iles' })
 vim.keymap.set('n', '<leader>sf', require('telescope.builtin').find_files, { desc = '[S]earch [F]iles' })
 vim.keymap.set('n', '<leader>sh', require('telescope.builtin').help_tags, { desc = '[S]earch [H]elp' })
-vim.keymap.set('n', '<leader>sw', require('telescope.builtin').grep_string, { desc = '[S]earch current [W]ord' })
+vim.keymap.set('n', '<leader>sw', function()
+  local word = vim.fn.expand("<cword>")
+  require('telescope.builtin').grep_string({ search = word })
+end, { desc = '[S]earch current [w]ord under cursor' })
+vim.keymap.set('n', '<leader>sW', function()
+  local word = vim.fn.expand("<cWORD>")
+  require('telescope.builtin').grep_string({ search = word })
+end, { desc = '[S]earch current [W]ord under cursor' })
 vim.keymap.set('n', '<leader>sg', require('telescope.builtin').live_grep, { desc = '[S]earch by [G]rep' })
 vim.keymap.set('n', '<leader>sd', require('telescope.builtin').diagnostics, { desc = '[S]earch [D]iagnostics' })
 
@@ -289,7 +299,6 @@ require('nvim-treesitter.configs').setup {
 }
 
 -- Diagnostic keymaps
--- vim.keymap.set("n", "<leader>xx", function() require("trouble").toggle() end, { desc = 'Toggle Trouble' })
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous diagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next diagnostic message' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Open floating diagnostic message' })
@@ -350,7 +359,7 @@ end
 --  define the property 'filetypes' to the map in question.
 local servers = {
   gopls = {},
-  pyright = { filetypes = { 'python' } },
+  pyright = {},
   html = { filetypes = { 'html', 'twig', 'hbs' } },
   -- templ = {},
   lua_ls = {
@@ -402,22 +411,40 @@ cmp.setup {
   },
   mapping = {
     ["<Tab>"] = function(fallback)
-      if cmp.visible() and cmp.get_active_entry() then
-        cmp.confirm({ behavior = cmp.ConfirmBehavior.Insert, select = true })
+      if cmp.visible() then
+        if cmp.get_active_entry() then
+          cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
+        else cmp.get_active_entry()
+          cmp.select_next_item()
+        end
       else
         fallback()
       end
     end,
     ["<S-Tab>"] = function(fallback)
-      if cmp.visible() and cmp.get_active_entry() then
+      if cmp.visible() and not cmp.get_active_entry() then
         cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
       else
         fallback()
       end
     end,
+    ["<S-Up>"] = function(fallback)
+      if cmp.visible() then
+        cmp.select_prev_item()
+      else
+        fallback()
+      end
+    end,
+    ["<S-Down>"] = function(fallback)
+      if cmp.visible() then
+        cmp.select_next_item()
+      else
+        fallback()
+      end
+    end
   },
   sources = {
-    { name = "Lnvim_lsp" },
+    { name = "nvim_lsp" },
     { name = "buffer" },
     { name = "path" },
     { name = "luasnip" },
