@@ -2,6 +2,7 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+vim.o.cursorline = true
 vim.o.tabstop = 4
 vim.o.softtabstop = 4
 vim.o.shiftwidth = 4
@@ -82,9 +83,6 @@ vim.keymap.set("n", "<leader>nt", "<Cmd>Neotree toggle<CR>", { remap = true })
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 
-vim.keymap.set("n", "<leader>fm", function()
-	vim.lsp.buf.format()
-end)
 
 -- Keeps cursor in middle when page jumping up and down
 vim.keymap.set("n", "<C-u>", "<C-u>zz")

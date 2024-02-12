@@ -1,5 +1,6 @@
 -- Vim options / setup
 require("opts_and_keymaps")
+vim.g.loaded_python3_provider = 0
 
 -- Lazyvim
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -34,7 +35,7 @@ require('lazy').setup({
 
       -- Useful status updates for LSP
       -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
-      { 'j-hui/fidget.nvim', opts = {} },
+      { 'j-hui/fidget.nvim',       opts = {} },
 
       -- Additional lua configuration, makes nvim stuff amazing!
       'folke/neodev.nvim',
@@ -134,7 +135,6 @@ require('lazy').setup({
       },
     },
   },
-
   {
     -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
@@ -163,8 +163,20 @@ require('lazy').setup({
       { "<leader>xx", function() require("trouble").toggle() end, desc = "Toggle Trouble" }
     },
   },
+  {
+    "nvimtools/none-ls.nvim",
+    config = function()
+      local null_ls = require("null-ls")
+      null_ls.setup({
+        debug = true,
+        sources = {
+          null_ls.builtins.formatting.black,  -- Will error if black not in path, which is what I want
+        },
+      })
+    end
+  },
   { import = 'plugins' },
-}, {})
+},{})
 
 -- [[ Configure Telescope ]]
 -- See `:help telescope` and `:help telescope.setup()`
@@ -343,10 +355,9 @@ local on_attach = function(_, bufnr)
     print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
   end, '[W]orkspace [L]ist Folders')
 
-  -- Create a command `:Format` local to the LSP buffer
-  vim.api.nvim_buf_create_user_command(bufnr, 'Format', function(_)
+  nmap("<leader>fm", function()
     vim.lsp.buf.format()
-  end, { desc = 'Format current buffer with LSP' })
+  end, "Format current buffer with LSP")
 end
 
 -- Enable the following language servers
@@ -360,10 +371,11 @@ end
 local servers = {
   gopls = {},
   pyright = {},
-  html = { filetypes = { 'html', 'twig', 'hbs' } },
+  html = { filetypes = { "html", "twig", "hbs" } },
   -- templ = {},
   lua_ls = {
     Lua = {
+      diagnostics = { globals = { "vim" } },
       workspace = { checkThirdParty = false },
       telemetry = { enable = false },
     },
@@ -410,38 +422,34 @@ cmp.setup {
     end,
   },
   mapping = {
-    ["<Tab>"] = function(fallback)
-      if cmp.visible() then
-        if cmp.get_active_entry() then
-          cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
-        else cmp.get_active_entry()
-          cmp.select_next_item()
-        end
+    ["<CR>"] = function(fallback)
+      if cmp.visible() and cmp.get_active_entry() then
+        cmp.confirm({ behavior = cmp.ConfirmBehavior.Insert, select = true })
       else
         fallback()
       end
     end,
-    ["<S-Tab>"] = function(fallback)
-      if cmp.visible() and not cmp.get_active_entry() then
+    ["<S-CR>"] = function(fallback)
+      if cmp.visible() and cmp.get_active_entry() then
         cmp.confirm({ behavior = cmp.ConfirmBehavior.Replace, select = true })
       else
         fallback()
       end
     end,
-    ["<S-Up>"] = function(fallback)
+    ["<Tab>"] = function(fallback)
+      if cmp.visible() then
+        cmp.select_next_item()
+      else
+        fallback()
+      end
+    end,
+    ["<S-Tab>"] = function(fallback)
       if cmp.visible() then
         cmp.select_prev_item()
       else
         fallback()
       end
     end,
-    ["<S-Down>"] = function(fallback)
-      if cmp.visible() then
-        cmp.select_next_item()
-      else
-        fallback()
-      end
-    end
   },
   sources = {
     { name = "nvim_lsp" },
