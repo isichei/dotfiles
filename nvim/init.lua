@@ -46,15 +46,8 @@ require('lazy').setup({
     -- Autocompletion
     'hrsh7th/nvim-cmp',
     dependencies = {
-      -- Snippet Engine & its associated nvim-cmp source
-      'L3MON4D3/LuaSnip',
-      'saadparwaiz1/cmp_luasnip',
-
       -- Adds LSP completion capabilities
       'hrsh7th/cmp-nvim-lsp',
-
-      -- Adds a number of user-friendly snippets
-      'rafamadriz/friendly-snippets',
 
       -- Adding lspkind for some icons
       'onsails/lspkind.nvim',
@@ -98,7 +91,7 @@ require('lazy').setup({
 
         vim.keymap.set("n", "<leader>gb", "<cmd>Gitsigns toggle_current_line_blame<CR>",
           { desc = "Toggle git blame current line" })
-        vim.keymap.set("n", "<leader>gd", "<cmd>Gitsigns diffthis<CR>", { desc = "Vertical Git diff" })
+        vim.keymap.set("n", "<leader>g|", "<cmd>Gitsigns diffthis<CR>", { desc = "Vertical Git diff" })
       end,
     },
   },
@@ -140,7 +133,7 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     dependencies = {
       'nvim-treesitter/nvim-treesitter-textobjects',
-      'vrischmann/tree-sitter-templ',
+      'vrischmann/tree-sitter-templ', -- :TSInstall templ
     },
     build = ':TSUpdate',
   },
@@ -170,13 +163,13 @@ require('lazy').setup({
       null_ls.setup({
         debug = true,
         sources = {
-          null_ls.builtins.formatting.black,  -- Will error if black not in path, which is what I want
+          null_ls.builtins.formatting.black, -- Will error if black not in path, which is what I want
         },
       })
     end
   },
   { import = 'plugins' },
-},{})
+}, {})
 
 -- [[ Configure Telescope ]]
 -- See `:help telescope` and `:help telescope.setup()`
@@ -372,7 +365,7 @@ local servers = {
   gopls = {},
   pyright = {},
   html = { filetypes = { "html", "twig", "hbs" } },
-  -- templ = {},
+  templ = {},
   lua_ls = {
     Lua = {
       diagnostics = { globals = { "vim" } },
@@ -388,6 +381,7 @@ require('neodev').setup()
 -- nvim-cmp supports additional completion capabilities, so broadcast that to servers
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)
+capabilities.textDocument.completion.completionItem.snippetSupport = false
 
 -- Ensure the servers above are installed
 local mason_lspconfig = require 'mason-lspconfig'
@@ -410,17 +404,11 @@ mason_lspconfig.setup_handlers {
 -- [[ Configure nvim-cmp ]]
 -- See `:help cmp`
 local cmp = require 'cmp'
-local luasnip = require 'luasnip'
 local lspkind = require 'lspkind'
-require('luasnip.loaders.from_vscode').lazy_load()
-luasnip.config.setup {}
 
 cmp.setup {
-  snippet = {
-    expand = function(args)
-      luasnip.lsp_expand(args.body)
-    end,
-  },
+  preselect = cmp.PreselectMode.None,
+  completeopt = 'menu,menuone,noinsert',
   mapping = {
     ["<CR>"] = function(fallback)
       if cmp.visible() and cmp.get_active_entry() then
@@ -455,19 +443,27 @@ cmp.setup {
     { name = "nvim_lsp" },
     { name = "buffer" },
     { name = "path" },
-    { name = "luasnip" },
   },
   formatting = {
     format = lspkind.cmp_format {
       menu = {
-        buffer = "[buf]",
         nvim_lsp = "[LSP]",
+        buffer = "[buf]",
         path = "[path]",
-        luasnip = "[snip]",
       },
     },
   },
   experimental = {
     ghost_text = true,
   },
+  window = {
+    documentation = {
+      border = "rounded",
+      winhighlight = "NormalFloat:CompeDocumentation,FloatBorder:CompeDocumentationBorder",
+      max_width = 50,
+      min_width = 50,
+      max_height = math.floor(vim.o.lines * 0.4),
+      min_height = 3,
+    }
+  }
 }
