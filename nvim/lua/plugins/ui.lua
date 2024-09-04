@@ -22,6 +22,7 @@ return {
       }
     }
   },
+  { "rose-pine/neovim", name = "rose-pine" },
   {
     "catppuccin/nvim",
     name = "catppuccin",
@@ -77,31 +78,17 @@ return {
     end,
   },
   {
-    "nvim-neo-tree/neo-tree.nvim",
-    version = "*",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "nvim-tree/nvim-web-devicons",   -- not strictly required, but recommended
-      "MunifTanjim/nui.nvim",
-    },
-    opts = {
-      filesystem = {
-        filtered_items = {
-          visible = true,
-          always_show = {
-            ".gitlab/",
-            ".gitlab-ci/",
-            ".gitlab-ci.yml",
-            ".gitignore"
-          },
-          never_show = {
-            ".DS_Store",
-          },
-          never_show_by_pattern = {       -- uses glob style patterns
-            "**/*.DS_Store"
-          },
+    "stevearc/oil.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+      require("oil").setup {
+        columns = { "icon", "size" },
+        view_options = {
+          show_hidden = true,
         },
-      },
-    },
+      }
+      -- Open parent directory in current window
+      vim.keymap.set("n", "<leader>o", "<CMD>Oil<CR>", { desc = "Open parent directory" })
+    end,
   }
 }
